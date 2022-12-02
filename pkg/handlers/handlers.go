@@ -142,7 +142,7 @@ func (h handler) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 func (h handler) GetAllNotifications(w http.ResponseWriter, r *http.Request) {
 	var notifications []entities.Notification
 
-	if result := h.DB.Find(&notifications); result.Error != nil {
+	if result := h.DB.Preload("Event").Find(&notifications); result.Error != nil {
 		log.Fatal(result.Error)
 	}
 
