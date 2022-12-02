@@ -4,9 +4,10 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/gorilla/mux"
+
 	"events-service/pkg/db"
 	"events-service/pkg/handlers"
-	"github.com/gorilla/mux"
 )
 
 func main() {
@@ -15,6 +16,13 @@ func main() {
 	h := handlers.New(DB)
 	r := mux.NewRouter()
 
+	// notification routes
+	r.HandleFunc("/notifications", h.GetAllNotifications).Methods("GET")
+	r.HandleFunc("/notifications/{id}", h.GetNotification).Methods("GET")
+	r.HandleFunc("/notifications", h.AddNotification).Methods("POST")
+	r.HandleFunc("/notifications/{id}", h.DeleteNotification).Methods("DELETE")
+
+	// event routes
 	r.HandleFunc("/events", h.GetAllEvents).Methods("GET")
 	r.HandleFunc("/events/{id}", h.GetEvent).Methods("GET")
 	r.HandleFunc("/events", h.AddEvent).Methods("POST")
