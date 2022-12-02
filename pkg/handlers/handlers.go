@@ -11,6 +11,8 @@ import (
 
 	"github.com/gorilla/mux"
 	"gorm.io/gorm"
+	validator "github.com/asaskevich/govalidator"
+	"github.com/satori/go.uuid"
 
 	"events-service/pkg/entities"
 )
@@ -171,27 +173,61 @@ func (h handler) GetNotification(w http.ResponseWriter, r *http.Request) {
 
 // AddNotification creates a new notification in the database.
 func (h handler) AddNotification(w http.ResponseWriter, r *http.Request) {
-	// Read to request body
+	// Read the request body
 	defer r.Body.Close()
 	body, err := ioutil.ReadAll(r.Body)
 
 	if err != nil {
 		log.Fatalln(err)
 	}
+	
+	// Unmarshal the request body into a Notification struct
+    var notification entities.Notification
+    json.Unmarshal(body, &notification)
 
-	var notification entities.Notification
-	json.Unmarshal(body, &notification)
+    // Get the values from the Notification struct
+    message := notification.Message
+    eventID := notification.EventID
 
-	// Append to the Notifications table
-	if result := h.DB.Create(&notification); result.Error != nil {
-		fmt.Println(result.Error)
-	}
+    // Generate a new UUID for the Notification struct
+    id := uuid.NewV4()
 
-	// Send a 201 created response
-	w.Header().Add("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	log.Println("Created new notification", &notification.ID)
-	json.NewEncoder(w).Encode("Created")
+    // Create a new Notification struct with the values from the request
+    newNotification := entities.Notification{
+        ID:      id.String(),
+        Message: message,
+        EventID: eventID,
+    }
+
+    // Validate the notification struct
+    if valid, err := validator.ValidateStruct(notification); valid != true {
+        log.Println(err)
+        http.Error(w, fmt.Sprintf("invalid request %s", err), http.StatusBadRequest)
+        return
+    }
+	// Look up the associated Event using the EventID field
+    var event entities.Event
+    if result := h.DB.Where("id = ?", eventID).First(&event); result.Error != nil {
+        log.Println(result.Error)
+        http.Error(w, "Invalid EventID", http.StatusBadRequest)
+        return
+    }
+
+    // Set the Event field in the Notification
+    notification.Event = event
+
+    // Append to the Notifications table
+    if result := h.DB.Create(&newNotification); result.Error != nil {
+        log.Println(result.Error)
+        http.Error(w, "Failed to create notification", http.StatusInternalServerError)
+        return
+    }
+
+    // Send a 201 created response
+    w.Header().Add("Content-Type", "application/json")
+    w.WriteHeader(http.StatusCreated)
+    log.Println("Created new notification", &notification.ID)
+    json.NewEncoder(w).Encode("Created")
 }
 
 // DeleteNotification deletes the notification with the given ID.
