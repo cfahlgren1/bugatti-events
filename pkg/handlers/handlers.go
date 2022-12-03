@@ -53,7 +53,6 @@ func (h handler) GetEvent(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(event)
-
 }
 
 // Create an Event in the database
@@ -214,4 +213,105 @@ func (h handler) AddNotification(w http.ResponseWriter, r *http.Request) {
     w.WriteHeader(http.StatusCreated)
     log.Println("Created new notification", &notification.ID)
     json.NewEncoder(w).Encode("Created")
+}
+
+func (h handler) GetNotificationsByEvent(w http.ResponseWriter, r *http.Request) {
+	// Get the event ID from the path parameter
+	eventID := mux.Vars(r)["event"]
+
+	// Query the notifications for the given event ID
+	var notifications []entities.Notification
+	if result := h.DB.Where("event_id = ?", eventID).Find(&notifications); result.Error != nil {
+		log.Fatal(result.Error)
+	}
+
+	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(notifications)
+}
+
+// Handle processes a signup request and adds the provided phone number to the specified event.
+func (h handler) AddPhoneNumberToEvent(w http.ResponseWriter, r *http.Request) {
+    // Parse and validate the request body.
+    var req entities.SignupRequest
+    if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+        http.Error(w, err.Error(), http.StatusBadRequest)
+        return
+    }
+    if valid, err := validator.ValidateStruct(req); err != nil || !valid {
+        http.Error(w, err.Error(), http.StatusBadRequest)
+        return
+    }
+
+    // Check if the event exists.
+    var event entities.Event
+    if result := h.DB.First(&event, "id = ?", req.EventID); result.Error != nil {
+        http.Error(w, result.Error.Error(), http.StatusInternalServerError)
+        return
+    }
+
+	// Check if the phone number exists, if not create it
+	phoneNumber := entities.PhoneNumber{
+		ID: req.PhoneNumber,
+		Number: req.PhoneNumber,
+	}
+	
+	if result := h.DB.First(&phoneNumber, "number = ?", req.PhoneNumber); result.Error != nil {
+		if result := h.DB.Create(&phoneNumber); result.Error != nil {
+			http.Error(w, result.Error.Error(), http.StatusInternalServerError)
+			return
+		}
+		log.Println("Created phone number", phoneNumber)
+	}
+
+    // Check if the phone number is already signed up for the event.
+    var existingRelationship entities.Relationship
+    if result := h.DB.First(&existingRelationship, "event_id = ? AND phone_number_id = ?", req.EventID, req.PhoneNumber); result.Error == nil {
+        http.Error(w, "phone number is already signed up for this event", http.StatusConflict)
+        return
+    }
+
+    // Create a new relationship between the event and the phone number.
+	relationship := entities.Relationship{
+		ID: uuid.NewV4().String(), 
+		EventID: req.EventID,
+		PhoneNumberID: req.PhoneNumber,
+	}
+	
+    if result := h.DB.Create(&relationship); result.Error != nil {
+        http.Error(w, result.Error.Error(), http.StatusInternalServerError)
+        return
+    }
+
+	// return successful response
+	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	log.Println("Created new event", &event.ID)
+	json.NewEncoder(w).Encode("Created")
+}
+
+func (h handler) ShowPhoneNumbersForEvent(w http.ResponseWriter, r *http.Request) {
+    // Parse the event ID from the request path.
+    eventID := mux.Vars(r)["event"]
+
+    // Fetch the event from the database.
+    var event entities.Event
+    if result := h.DB.First(&event, "id = ?", eventID); result.Error != nil {
+        http.Error(w, result.Error.Error(), http.StatusInternalServerError)
+        return
+    }
+
+	// Fetch the phone numbers associated with the event from the database.
+	var phoneNumbers []entities.PhoneNumber
+	if result := h.DB.Table("phone_numbers").Joins("LEFT JOIN relationships ON phone_numbers.id = relationships.phone_number_id").Where("relationships.event_id = ?", event.ID).Find(&phoneNumbers); result.Error != nil {
+		http.Error(w, result.Error.Error(), http.StatusInternalServerError)
+		return
+	}
+
+    // Convert the phone numbers to a slice of strings and return them as a response.
+    numbers := make([]string, len(phoneNumbers))
+    for i, number := range phoneNumbers {
+        numbers[i] = number.Number
+    }
+    json.NewEncoder(w).Encode(numbers)
 }

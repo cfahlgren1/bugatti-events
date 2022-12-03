@@ -21,8 +21,11 @@ func Init() *gorm.DB {
 		log.Fatalln(err)
 	}
 
+	// auto migrate entities
 	db.AutoMigrate(&entities.Event{})
 	db.AutoMigrate(&entities.Notification{})
+	db.AutoMigrate(&entities.PhoneNumber{})
+	db.AutoMigrate(&entities.Relationship{})
 
 	// Read the files in the migrations folder
 	filepath.Walk("migrations", func(path string, info os.FileInfo, err error) error {
