@@ -6,22 +6,22 @@ import (
 
 // Event struct (Model)
 type Event struct {
-	ID          string    `json:"id"`
+	ID          string    `json:"-"`
 	Name        string    `json:"name`
 	Description string    `json:"description"`
 	Location    string    `json:"location"`
 	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
-	DeletedAt   time.Time `json:"deleted_at,omitempty"`
+	UpdatedAt   time.Time `json:"-"`
+	DeletedAt   time.Time `json:"-,omitempty"`
 }
 
 type Notification struct {
-    ID        string    `json:"id"`
+    ID        string    `json:"-"`
     Message   string    `json:"message" validate:"required"`
     SentAt    time.Time `json:"sent_at"`
-    Event     Event     `gorm:"foreignkey:EventID`
+    Event     Event     `json:"-" gorm:"foreignkey:EventID`
     EventID   string    `json:"event_id" validate:"required"`
-    CreatedAt time.Time `json:"created_at"`
-    UpdatedAt time.Time `json:"updated_at,omitempty"`
-    DeletedAt time.Time `json:"deleted_at,omitempty"`
+    CreatedAt time.Time `json:"-"`
+    UpdatedAt time.Time `json:"-,omitempty"`
+    DeletedAt time.Time `json:"-,omitempty"`
 }
