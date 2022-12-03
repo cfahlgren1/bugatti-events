@@ -10,6 +10,7 @@ type Event struct {
 	Name        string    `json:"name`
 	Description string    `json:"description"`
 	Location    string    `json:"location"`
+	MeetingTime time.Time `json:"meeting_time"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"-"`
 	DeletedAt   time.Time `json:"-,omitempty"`

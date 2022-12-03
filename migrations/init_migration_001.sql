@@ -1,53 +1,31 @@
--- Add seed data for events
 INSERT INTO events (
         id,
         name,
         description,
         location,
-        created_at,
-        updated_at
+        meeting_time,
+        created_at
     )
 VALUES (
-        '1',
-        'Ferrari Meet',
-        'Monthly meetup for Ferrari owners and enthusiasts',
-        'Ferrari dealership',
+        'event-1',
+        'Car Meetup 1',
+        'A meetup for car enthusiasts',
+        'Central Park',
         TO_TIMESTAMP('2022-12-01 12:00:00', 'YYYY-MM-DD HH24:MI:SS'),
-        TO_TIMESTAMP('2022-12-01 12:00:00', 'YYYY-MM-DD HH24:MI:SS')
-    ),
-    (
-        '2',
-        'Exotic Car Show',
-        'Annual car show featuring exotic and luxury vehicles',
-        'Convention center',
-        TO_TIMESTAMP('2022-12-01 12:00:00', 'YYYY-MM-DD HH24:MI:SS'),
-        TO_TIMESTAMP('2022-12-01 12:00:00', 'YYYY-MM-DD HH24:MI:SS')
-    ),
-    (
-        '3',
-        'Import Meet',
-        'Weekly meetup for owners of imported performance vehicles',
-        'Local park',
-        TO_TIMESTAMP('2022-12-01 12:00:00', 'YYYY-MM-DD HH24:MI:SS'),
-        TO_TIMESTAMP('2022-12-01 12:00:00', 'YYYY-MM-DD HH24:MI:SS')
+        NOW()
     ) ON CONFLICT (id) DO NOTHING;
--- Add seed data for notifications
-INSERT INTO notifications (id, message, sent_at, event_id)
+-- Insert a row into the phone_numbers table
+INSERT INTO phone_numbers (id, number, created_at)
+VALUES ('2125551212', '2125551212', NOW()) ON CONFLICT (id) DO NOTHING;
+-- Insert a row into the relationships table
+INSERT INTO relationships (id, event_id, phone_number_id)
+VALUES ('relationship-1', 'event-1', '2125551212') ON CONFLICT (id) DO NOTHING;
+-- Insert a row into the notifications table
+INSERT INTO notifications (id, message, sent_at, event_id, created_at)
 VALUES (
-        '1',
-        'Ferrari Meet: Due to inclement weather, the meet has been moved to next weekend. Sorry for any inconvenience.',
-        TO_TIMESTAMP('2022-12-01 12:00:00', 'YYYY-MM-DD HH24:MI:SS'),
-        '1'
-    ),
-    (
-        '2',
-        'Exotic Car Show: The date of the show has been changed to next month. Mark your calendars!',
-        TO_TIMESTAMP('2022-12-01 12:00:00', 'YYYY-MM-DD HH24:MI:SS'),
-        '2'
-    ),
-    (
-        '3',
-        'Import Meet: The meet location has been changed to a new parking lot. See you there!',
-        TO_TIMESTAMP('2022-12-01 12:00:00', 'YYYY-MM-DD HH24:MI:SS'),
-        '3'
+        'notification-1',
+        'Car Meetup 1 is coming up soon!',
+        TO_TIMESTAMP('2022-12-01 10:00:00', 'YYYY-MM-DD HH24:MI:SS'),
+        'event-1',
+        NOW()
     ) ON CONFLICT (id) DO NOTHING;
