@@ -153,24 +153,6 @@ func (h handler) GetAllNotifications(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(notifications)
 }
 
-// GetNotification returns the notification with the given ID.
-func (h handler) GetNotification(w http.ResponseWriter, r *http.Request) {
-	// Read dynamic id parameter
-	vars := mux.Vars(r)
-	id, _ := vars["id"]
-
-	// Find notification by Id
-	var notification entities.Notification
-
-	if result := h.DB.First(&notification, "id = ?", id); result.Error != nil {
-		fmt.Println(result.Error)
-	}
-
-	w.Header().Add("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(notification)
-}
-
 // AddNotification creates a new notification in the database.
 func (h handler) AddNotification(w http.ResponseWriter, r *http.Request) {
 	// Read the request body
@@ -228,25 +210,4 @@ func (h handler) AddNotification(w http.ResponseWriter, r *http.Request) {
     w.WriteHeader(http.StatusCreated)
     log.Println("Created new notification", &notification.ID)
     json.NewEncoder(w).Encode("Created")
-}
-
-// DeleteNotification deletes the notification with the given ID.
-func (h handler) DeleteNotification(w http.ResponseWriter, r *http.Request) {
-	// Read the dynamic id parameter
-	vars := mux.Vars(r)
-	id, _ := strconv.Atoi(vars["id"])
-
-	// Find the notification by Id
-	var notification entities.Notification
-
-	if result := h.DB.First(&notification, id); result.Error != nil {
-		fmt.Println(result.Error)
-	}
-
-	// Delete that notification
-	h.DB.Delete(&notification)
-
-	w.Header().Add("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode("Deleted")
 }

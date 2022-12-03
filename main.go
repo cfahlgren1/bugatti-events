@@ -18,9 +18,7 @@ func main() {
 
 	// notification routes
 	r.HandleFunc("/notifications", h.GetAllNotifications).Methods("GET")
-	r.HandleFunc("/notifications/{id}", h.GetNotification).Methods("GET")
 	r.HandleFunc("/notifications", h.AddNotification).Methods("POST")
-	r.HandleFunc("/notifications/{id}", h.DeleteNotification).Methods("DELETE")
 
 	// event routes
 	r.HandleFunc("/events", h.GetAllEvents).Methods("GET")

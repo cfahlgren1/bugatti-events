@@ -19,8 +19,8 @@ type Notification struct {
     ID        string    `json:"id"`
     Message   string    `json:"message" validate:"required"`
     SentAt    time.Time `json:"sent_at"`
-    Event     Event     `json:"event_id" gorm:"foreignkey:EventID`
-    EventID   string    `validate:"required"`
+    Event     Event     `gorm:"foreignkey:EventID`
+    EventID   string    `json:"event_id" validate:"required"`
     CreatedAt time.Time `json:"created_at"`
     UpdatedAt time.Time `json:"updated_at,omitempty"`
     DeletedAt time.Time `json:"deleted_at,omitempty"`
