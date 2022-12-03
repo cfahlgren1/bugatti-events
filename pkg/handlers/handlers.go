@@ -14,6 +14,7 @@ import (
 	validator "github.com/asaskevich/govalidator"
 	"github.com/satori/go.uuid"
 
+	"events-service/pkg/sms"
 	"events-service/pkg/entities"
 )
 
@@ -187,6 +188,9 @@ func (h handler) AddNotification(w http.ResponseWriter, r *http.Request) {
         http.Error(w, fmt.Sprintf("invalid request %s", err), http.StatusBadRequest)
         return
     }
+
+	sms.SendSms([]string{}, message)
+
 	// Look up the associated Event using the EventID field
     var event entities.Event
     if result := h.DB.Where("id = ?", eventID).First(&event); result.Error != nil {
